@@ -1,0 +1,67 @@
+version: "3.8"
+
+services:
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+
+  order-service:
+    build:
+      context: ./services/order-service
+    ports:
+      - "8001:8001"
+    depends_on:
+      - redis
+    env_file:
+      - .env
+
+  execution-service:
+    build:
+      context: ./services/execution-service
+    ports:
+      - "50051:50051"
+    depends_on:
+      - redis
+    env_file:
+      - .env
+
+  risk-service:
+    build:
+      context: ./services/risk-service
+    env_file:
+      - .env
+    depends_on:
+      - redis
+
+  user-service:
+    build:
+      context: ./services/user-service
+    env_file:
+      - .env
+    depends_on:
+      - redis
+
+  symbol-service:
+    build:
+      context: ./services/symbol-service
+    env_file:
+      - .env
+    depends_on:
+      - redis
+
+  stream-service:
+    build:
+      context: ./services/stream-service
+    env_file:
+      - .env
+    depends_on:
+      - redis
+
+  redis-service:
+    build:
+      context: ./services/redis-service
+    env_file:
+      - .env
+    depends_on:
+      - redis

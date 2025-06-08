@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package order;
+
+message OrderRequest {
+  string user_id = 1;
+  string symbol = 2;
+  double price = 3;
+  double quantity = 4;
+  string side = 5;       // "BUY" / "SELL"
+  string ordertype = 6;  // "LIMIT" / "MARKET" / "SL"
+  double ltp = 7;
+  double stopprice = 8;
+}
+
+message OrderResponse {
+  string status = 1;     // ACCEPTED / REJECTED / ERROR
+  string message = 2;
+}
+
+service OrderService {
+  rpc SubmitOrder(OrderRequest) returns (OrderResponse);
+}

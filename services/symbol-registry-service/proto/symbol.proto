@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+service SymbolRegistry {
+  rpc GetSymbolMetadata (SymbolRequest) returns (SymbolMetadata);
+}
+
+message SymbolRequest {
+  string symbol = 1;
+}
+
+message SymbolMetadata {
+  string symbol = 1;
+  double tick_size = 2;
+  int32 precision = 3;
+  double max_leverage = 4;
+  double initial_margin = 5;
+  double maintenance_margin = 6;
+}

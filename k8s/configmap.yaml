@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alpha-oms-env
+data:
+  REDIS_HOST: redis
+  REDIS_PORT: "6379"
+  GRPC_EXECUTOR_HOST: execution-service
+  GRPC_EXECUTOR_PORT: "50051"

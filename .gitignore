@@ -1,0 +1,15 @@
+/build/
+build/
+builddir/
+.vscode/
+*.o
+*.log
+*.so
+*.a
+*.pb.*
+*.ninja*
+*.swp
+*.DS_Store
+*.out
+*.exe
+*.json

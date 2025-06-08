@@ -1,0 +1,60 @@
+name: Alpha OMS Tasks
+description: Task breakdown for microservices project
+title: "[AlphaOMS] "
+labels: ["task", "microservice"]
+assignees: []
+
+body:
+  - type: checkboxes
+    id: services
+    attributes:
+      label: Microservices
+      description: Core components
+      options:
+        - label: OrderService: Controller, Validator, Router, gRPC Client
+        - label: ExecutionService: Executors, gRPC Server
+        - label: RiskService: LTP Listener, Evaluator, Liquidation Manager
+        - label: UserService: Wallet Manager, Scheduler
+        - label: SymbolService: Orderbook + Snapshot
+        - label: StreamService: Redis Subscriber + Parser
+        - label: RedisService: Order Updater, Trade Broadcaster
+        - label: ConfigService: .env Loader
+
+  - type: checkboxes
+    id: docker
+    attributes:
+      label: Docker & DevOps
+      options:
+        - label: Dockerfile for all services
+        - label: docker-compose healthchecks
+        - label: Volume-mount Redis logs
+
+  - type: checkboxes
+    id: build
+    attributes:
+      label: Build System
+      options:
+        - label: Conanfile + dependencies
+        - label: Meson files for all services
+        - label: gRPC Protobuf files moved
+        - label: Protobuf build integrated
+
+  - type: checkboxes
+    id: testing
+    attributes:
+      label: Testing CLI
+      options:
+        - label: CLI `test_order_cli` setup
+        - label: Fix json.hpp/iOS stream errors
+        - label: Add test hooks in each service
+
+  - type: checkboxes
+    id: postbuild
+    attributes:
+      label: Post-Build Tasks
+      options:
+        - label: gRPC C# client for API Gateway
+        - label: Connect to React frontend
+        - label: Add CI/CD pipeline
+        - label: Add README architecture diagram
+        - label: Add Kubernetes deploy config

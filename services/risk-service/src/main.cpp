@@ -10,7 +10,7 @@
 
 
 int startHealthCheckServer();
-
+MarginListener marginListener;
 
 using boost::asio::steady_timer;
 using namespace std::chrono_literals;
@@ -77,6 +77,7 @@ int main() {
 
         scheduleRMSLoop(userId);
     }
+    marginListener.start();
 
     std::thread([] {
         using namespace std::chrono_literals;

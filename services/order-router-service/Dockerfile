@@ -10,3 +10,4 @@ COPY . .
 RUN ./build.sh
 
 CMD ["./build/order-router-service"]
+

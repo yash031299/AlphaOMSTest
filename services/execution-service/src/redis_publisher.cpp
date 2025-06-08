@@ -3,6 +3,7 @@
 #include <spdlog/spdlog.h>
 using namespace sw::redis;
 
+
 Redis redisClient("tcp://localhost:6379");
 
 RedisPublisher::RedisPublisher() {}
@@ -15,9 +16,10 @@ void RedisPublisher::publishTrade(const std::string& symbol,
     try {
         std::string payload = fmt::format(R"({{"symbol":"{}","user":"{}","price":{},"qty":{},"side":"{}"}})",
                                           symbol, user_id, price, qty, side);
-        redisClient.publish("trades", payload);
-        SPDLOG_INFO("Published trade: {}", payload);
+
+        redisClient.xadd("STREAM:TRADE", "*", {{"trade", payload}});
+        SPDLOG_INFO("XADD trade to STREAM:TRADE: {}", payload);
     } catch (const std::exception& e) {
-        SPDLOG_ERROR("Redis publish failed: {}", e.what());
+        SPDLOG_ERROR("Redis XADD failed: {}", e.what());
     }
 }

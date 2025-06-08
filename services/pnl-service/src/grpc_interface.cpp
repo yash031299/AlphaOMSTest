@@ -36,3 +36,11 @@ grpc::Status PnLServiceImpl::CheckLiquidation(grpc::ServerContext*,
     response->set_should_liquidate(liquidate);
     return grpc::Status::OK;
 }
+
+std::shared_ptr<EquityCalculator> PnLServiceImpl::getOrCreateUser(const std::string& userId) {
+    if (!users_.count(userId)) {
+        users_[userId] = std::make_shared<EquityCalculator>(userId, 1000.0);
+        users_[userId]->setSymbolService(symbolClient_);
+    }
+    return users_[userId];
+}

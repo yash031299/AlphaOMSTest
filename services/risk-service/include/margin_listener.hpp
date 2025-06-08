@@ -1,13 +1,14 @@
 #pragma once
+#include <thread>
+#include <atomic>
 
-class RedisListener {
+class MarginListener {
 public:
     void start();
     void stop();
 
 private:
     void listen();
-    void publishMarginCheck(const std::string& userId);
-    bool running = false;
     std::thread listenerThread;
+    std::atomic<bool> running{false};
 };

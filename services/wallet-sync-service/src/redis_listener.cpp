@@ -2,38 +2,79 @@
 #include "wallet_store.hpp"
 #include <hiredis/hiredis.h>
 #include <spdlog/spdlog.h>
-#include <nlohmann/json.hpp>
+#include <rapidjson/document.h>
+#include <thread>
+#include <chrono>
 
-using json = nlohmann::json;
+extern WalletStore walletStore;
 
-void RedisTradeListener::start(const std::string& host, int port, const std::string& channel) {
-    redisContext* ctx = redisConnect(host.c_str(), port);
-    if (!ctx || ctx->err) {
-        SPDLOG_ERROR("Redis connection failed: {}", ctx ? ctx->errstr : "null");
+void RedisListener::start() {
+    running = true;
+    listenerThread = std::thread(&RedisListener::listen, this);
+}
+
+void RedisListener::stop() {
+    running = false;
+    if (listenerThread.joinable()) {
+        listenerThread.join();
+    }
+}
+
+void RedisListener::publishMarginCheck(const std::string& userId) {
+    redisContext* redis = redisConnect("127.0.0.1", 6379);
+    if (!redis || redis->err) {
+        SPDLOG_ERROR("Redis connection error in publishMarginCheck: {}", redis->errstr);
         return;
     }
 
-    redisReply* reply = (redisReply*)redisCommand(ctx, "SUBSCRIBE %s", channel.c_str());
-    if (reply) freeReplyObject(reply);
+    std::string queue = "QUEUE:MARGIN:CHECK:" + userId;
+    redisCommand(redis, "RPUSH %s %s", queue.c_str(), userId.c_str());
 
-    SPDLOG_INFO("Subscribed to Redis channel: {}", channel);
+    redisFree(redis);
+}
 
-    while (redisGetReply(ctx, (void**)&reply) == REDIS_OK) {
-        if (reply && reply->type == REDIS_REPLY_ARRAY && reply->elements == 3) {
-            std::string payload = reply->element[2]->str;
-
-            try {
-                auto j = json::parse(payload);
-                std::string userId = j.at("userId");
-                double pnl = j.at("unrealizedPnL");
-
-                WalletStore::applyTrade(userId, pnl);
-            } catch (const std::exception& ex) {
-                SPDLOG_ERROR("Invalid trade JSON: {}", ex.what());
-            }
-        }
-        if (reply) freeReplyObject(reply);
+void RedisListener::listen() {
+    redisContext* redis = redisConnect("127.0.0.1", 6379);
+    if (!redis || redis->err) {
+        SPDLOG_ERROR("Redis connection failed: {}", redis->errstr);
+        return;
     }
 
-    redisFree(ctx);
+    SPDLOG_INFO("📥 Wallet-Sync listening to STREAM:TRADE");
+
+    std::string last_id = "0";
+
+    while (running) {
+        redisReply* reply = (redisReply*)redisCommand(redis, "XREAD COUNT 1 BLOCK 0 STREAMS STREAM:TRADE %s", last_id.c_str());
+
+        if (!reply || reply->type != REDIS_REPLY_ARRAY) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            continue;
+        }
+
+        if (reply->element[0]->elements >= 2) {
+            auto entries = reply->element[0]->element[1];
+            for (size_t i = 0; i < entries->elements; ++i) {
+                auto entry = entries->element[i];
+                std::string entry_id = entry->element[0]->str;
+                std::string tradeJson = entry->element[1]->element[1]->str;
+                last_id = entry_id;
+
+                walletStore.applyTrade(tradeJson);
+
+                // extract user ID for margin check
+                rapidjson::Document doc;
+                doc.Parse(tradeJson.c_str());
+
+                if (!doc.HasParseError() && doc.HasMember("user")) {
+                    std::string userId = doc["user"].GetString();
+                    publishMarginCheck(userId);
+                }
+            }
+        }
+
+        freeReplyObject(reply);
+    }
+
+    redisFree(redis);
 }

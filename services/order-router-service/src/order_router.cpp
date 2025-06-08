@@ -1,4 +1,5 @@
 #include "order_router.hpp"
+#include "grpc_client.hpp"
 #include "include/utils/logger.h"
 #include <hiredis/hiredis.h>
 #include <rapidjson/document.h>
@@ -49,17 +50,29 @@ void OrderRouterService::processOrder(const std::string& jsonString) {
     rapidjson::Document doc;
     doc.Parse(jsonString.c_str());
 
-    if (doc.HasParseError() || !doc.HasMember("userId") || !doc.HasMember("symbol")) {
+    if (doc.HasParseError() || !doc.HasMember("orderType") || !doc.HasMember("symbol")) {
         SPD_ERROR("Invalid order JSON: {}", jsonString);
         return;
     }
 
-    std::string userId = doc["userId"].GetString();
-    std::string orderId = doc["orderId"].GetString();
-    std::string orderType = doc["orderType"].GetString();
+    const std::string orderType = doc["orderType"].GetString();
+    const std::string symbol = doc["symbol"].GetString();
 
-    SPD_INFO("Routing order {} of type {} for user {}", orderId, orderType, userId);
+    if (orderType == "MARKET" || orderType == "SL") {
+        SPD_INFO("Routing {} order to execution-service", orderType);
+        try {
+            ExecutionGRPCClient execClient(std::getenv("EXECUTION_HOST"));
+            bool ok = execClient.sendOrder(jsonString);
+            if (!ok) SPD_ERROR("execution-service gRPC returned failure");
+        } catch (const std::exception& ex) {
+            SPD_ERROR("gRPC call failed: {}", ex.what());
+        }
 
-    redisPool->enqueueUpdate(jsonString); // Write to Redis
-    // TODO: route to execution/match-engine (deferred to integration phase)
+    } else if (orderType == "LIMIT") {
+        SPD_INFO("Routing LIMIT order to match-engine queue");
+        std::string queue = "QUEUE:MATCH:" + symbol;
+        redisCommand(redis, "RPUSH %s %s", queue.c_str(), jsonString.c_str());
+    } else {
+        SPD_WARN("Unknown orderType '{}', skipping", orderType);
+    }
 }

@@ -2,26 +2,61 @@
 #include <grpcpp/server_builder.h>
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
+#include <thread>
+#include <hiredis/hiredis.h>
+#include <rapidjson/document.h>
 #include "grpc_interface.hpp"
 
-int main() {
-    auto logger = spdlog::stdout_color_mt("pnl-service");
-    spdlog::set_default_logger(logger);
-    spdlog::set_level(spdlog::level::info);
-    spdlog::set_pattern("[%Y-%m-%d %H:%M:%S] [%^%l%$] %v");
+void streamTradeListener(PnLServiceImpl* service) {
+    SPDLOG_INFO("🧠 Starting trade stream listener...");
 
-    SPDLOG_INFO("🚀 Starting PnL Service...");
+    redisContext* redis = redisConnect("127.0.0.1", 6379);
+    if (!redis || redis->err) {
+        SPDLOG_ERROR("Redis connection failed: {}", redis ? redis->errstr : "null");
+        return;
+    }
 
-    std::string server_address = "0.0.0.0:7000";
-    PnLServiceImpl service;
+    std::string last_id = "0";
 
-    grpc::ServerBuilder builder;
-    builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
-    builder.RegisterService(&service);
+    while (true) {
+        redisReply* reply = (redisReply*)redisCommand(redis, "XREAD COUNT 1 BLOCK 0 STREAMS STREAM:TRADE %s", last_id.c_str());
+        if (!reply || reply->type != REDIS_REPLY_ARRAY) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+            continue;
+        }
 
-    std::unique_ptr<grpc::Server> server(builder.BuildAndStart());
-    SPDLOG_INFO("📡 gRPC server listening on {}", server_address);
+        if (reply->element[0]->elements >= 2) {
+            auto entries = reply->element[0]->element[1];
+            for (size_t i = 0; i < entries->elements; ++i) {
+                auto entry = entries->element[i];
+                std::string entry_id = entry->element[0]->str;
+                std::string jsonTrade = entry->element[1]->element[1]->str;
+                last_id = entry_id;
 
-    server->Wait();
-    return 0;
+                rapidjson::Document doc;
+                doc.Parse(jsonTrade.c_str());
+
+                if (doc.HasParseError()) {
+                    SPDLOG_ERROR("JSON parse error: {}", jsonTrade);
+                    continue;
+                }
+
+                std::string userId = doc["user"].GetString();
+                std::string symbol = doc["symbol"].GetString();
+                double price = doc["price"].GetDouble();
+                double qty = doc["qty"].GetDouble();
+                std::string side = doc["side"].GetString();
+
+                auto user = service->getOrCreateUser(userId);  // See below
+                user->updateLTP(symbol, price);
+
+                double signedQty = (side == "BUY") ? qty : -qty;
+                user->updatePosition(symbol, signedQty, price);
+            }
+        }
+
+        freeReplyObject(reply);
+    }
+
+    redisFree(redis);
 }

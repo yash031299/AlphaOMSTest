@@ -18,6 +18,8 @@ public:
     grpc::Status CheckLiquidation(grpc::ServerContext* context,
                                   const PnLRequest* request,
                                   LiquidationResponse* response) override;
+    std::shared_ptr<EquityCalculator> getOrCreateUser(const std::string& userId);
+
 
 private:
     std::unordered_map<std::string, std::shared_ptr<EquityCalculator>> users_;

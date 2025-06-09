@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package accounting;
+
+service AccountingService {
+  rpc ApplyFunding (FundingRequest) returns (Ack);
+  rpc RecordPnL (PnLRequest) returns (Ack);
+}
+
+message FundingRequest {
+  string user_id = 1;
+  string symbol = 2;
+  double funding_amount = 3;
+  string timestamp = 4;
+}
+
+message PnLRequest {
+  string user_id = 1;
+  string symbol = 2;
+  double realized_pnl = 3;
+  string timestamp = 4;
+}
+
+message Ack {
+  bool success = 1;
+  string message = 2;
+}

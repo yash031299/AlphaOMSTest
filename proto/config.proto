@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package config;
+
+service ConfigService {
+  rpc GetConfig (ConfigRequest) returns (ConfigValue);
+  rpc GetAll (Empty) returns (ConfigMap);
+}
+
+message ConfigRequest {
+  string key = 1;
+}
+
+message ConfigValue {
+  string value = 1;
+  bool found = 2;
+}
+
+message Empty {}
+
+message ConfigMap {
+  map<string, string> configs = 1;
+}

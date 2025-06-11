@@ -6,8 +6,8 @@
 class PnLClient {
 public:
     explicit PnLClient(std::shared_ptr<grpc::Channel> channel);
-    void sendTradeUpdate(const std::string& user_id, const std::string& symbol,
-                         double price, double quantity, const std::string& side);
+    bool sendTradeUpdate(const std::string& user_id, const std::string& symbol,
+                     double price, double qty, const std::string& side);
 
 private:
     std::unique_ptr<pnl::PnLService::Stub> stub_;

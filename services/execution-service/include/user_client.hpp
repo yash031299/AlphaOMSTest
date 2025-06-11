@@ -8,7 +8,7 @@ class UserWalletClient {
 public:
     explicit UserWalletClient(std::shared_ptr<grpc::Channel> channel);
 
-    void updateWallet(const std::string& user_id,
+    bool updateWallet(const std::string& user_id,
                       double amount_change,
                       const std::string& reason);
 private:

@@ -1,24 +1,46 @@
 #include "user_client.hpp"
 #include <spdlog/spdlog.h>
+#include <cstdlib>
+#include <thread>
+#include <chrono>
+#include "user.pb.h"
+#include "user.grpc.pb.h"
+
 
 UserWalletClient::UserWalletClient(std::shared_ptr<grpc::Channel> channel)
     : stub_(user::UserService::NewStub(channel)) {}
 
-void UserWalletClient::updateWallet(const std::string& user_id,
-                                    double amount_change,
+bool UserWalletClient::updateWallet(const std::string& user_id,
+                                    double amount,
                                     const std::string& reason) {
-    user::WalletUpdateRequest req;
-    req.set_user_id(user_id);
-    req.set_amount_change(amount_change);
-    req.set_reason(reason);
+    user::WalletUpdateRequest request;
+    request.set_user_id(user_id);
+    request.set_amount_change(amount);
+    request.set_reason(reason);
 
-    user::WalletResponse resp;
-    grpc::ClientContext ctx;
+    grpc::Status status;
 
-    auto status = stub_->UpdateWallet(&ctx, req, &resp);
-    if (!status.ok()) {
-        SPDLOG_ERROR("Wallet update failed for {}: {}", user_id, status.error_message());
-    } else {
-        SPDLOG_INFO("Wallet updated: new balance = {}, success = {}", resp.new_balance(), resp.success());
+    for (int attempt = 1; attempt <= 3; ++attempt) {
+        grpc::ClientContext context;
+        user::WalletResponse response;
+
+        try {
+            status = stub_->UpdateWallet(&context, request, &response);
+        } catch (const std::exception& e) {
+            SPDLOG_ERROR("❌ gRPC exception (UserWallet) on attempt {}: {}", attempt, e.what());
+        } catch (...) {
+            SPDLOG_ERROR("❌ Unknown exception (UserWallet) on attempt {}", attempt);
+        }
+
+        if (status.ok()) {
+            SPDLOG_INFO("✅ Wallet update succeeded on attempt {} for user: {}", attempt, user_id);
+            return true;
+        }
+
+        SPDLOG_WARN("⚠️ Wallet update failed (attempt {}): {}", attempt, status.error_message());
+        std::this_thread::sleep_for(std::chrono::milliseconds(100 * (1 << (attempt - 1))));
     }
+
+    SPDLOG_ERROR("❌ Wallet update failed after all retries for user: {}", user_id);
+    return false;
 }

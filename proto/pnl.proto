@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package pnl;
+
+message TradeUpdate {
+  string user_id = 1;
+  string symbol = 2;
+  double price = 3;
+  double quantity = 4;
+  string side = 5;
+}
+
+message Empty {}
+
+service PnLService {
+  rpc SendTrade(TradeUpdate) returns (Empty);
+}

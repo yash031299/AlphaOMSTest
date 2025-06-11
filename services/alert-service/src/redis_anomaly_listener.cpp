@@ -7,6 +7,11 @@
 
 extern std::shared_ptr<AnomalyDetector> anomalyDetector;
 
+RedisAnomalyListener::RedisAnomalyListener(std::shared_ptr<AlertDispatcher> dispatcher)
+    : dispatcher_(std::move(dispatcher)) {
+    }
+
+
 void RedisAnomalyListener::start() {
     running = true;
     listenerThread = std::thread(&RedisAnomalyListener::listen, this);
@@ -48,7 +53,8 @@ void RedisAnomalyListener::listen() {
                 double value = j.at("value");
 
                 SPDLOG_INFO("🧠 Triggering anomaly check: {} {}={}", userId, metric, value);
-                anomalyDetector->evaluate(userId, metric, value);
+                if (anomalyDetector) anomalyDetector->evaluate(userId, metric, value);
+
             } catch (const std::exception& e) {
                 SPDLOG_ERROR("JSON parse error: {}", e.what());
             }

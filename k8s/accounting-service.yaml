@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: accounting-service
+  labels:
+    app: accounting-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: accounting-service
+  template:
+    metadata:
+      labels:
+        app: accounting-service
+    spec:
+      containers:
+        - name: accounting-service
+          image: your-registry/accounting-service:latest # Replace
+          ports:
+            - containerPort: 6008 # gRPC
+            - containerPort: 8081 # /metrics and /health
+          env:
+            - name: GRPC_HOST
+              value: "0.0.0.0"
+            - name: GRPC_PORT
+              value: "6008"
+            - name: SNAPSHOT_INTERVAL_SEC
+              value: "60"
+            - name: LEDGER_SNAPSHOT_DIR
+              value: "/snapshots"
+            - name: POSTGRES_URI
+              valueFrom:
+                secretKeyRef:
+                  name: accounting-postgres-secret
+                  key: POSTGRES_URI
+            - name: ENABLE_REDIS_EVENTS
+              value: "true"
+          volumeMounts:
+            - mountPath: /snapshots
+              name: snapshot-volume
+      volumes:
+        - name: snapshot-volume
+          emptyDir: {} # or use PVC
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: accounting-service
+spec:
+  selector:
+    app: accounting-service
+  ports:
+    - name: grpc
+      port: 6008
+      targetPort: 6008
+    - name: metrics
+      port: 8081
+      targetPort: 8081

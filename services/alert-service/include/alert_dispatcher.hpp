@@ -1,12 +1,15 @@
-#ifndef ALERT_DISPATCHER_HPP
-#define ALERT_DISPATCHER_HPP
-
-#include "rule_engine.hpp"
+#pragma once
+#include "alert.hpp"
+#include <memory>
 #include <string>
+
+class AlertAuditLogger;
 
 class AlertDispatcher {
 public:
-    void dispatch(const std::string& userId, const Alert& alert);
-};
+    AlertDispatcher(std::shared_ptr<AlertAuditLogger> logger);
+    void dispatch(const std::string& userId, const Alert& alert);  // ✅ Corrected signature
 
-#endif // ALERT_DISPATCHER_HPP
+private:
+    std::shared_ptr<AlertAuditLogger> logger_;
+};

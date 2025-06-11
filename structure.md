@@ -10,6 +10,7 @@ AlphaOMS
 │       └── build.yml
 ├── core
 ├── k8s
+│   ├── accounting-service.yaml
 │   ├── configmap.yaml
 │   ├── execution-service.yaml
 │   ├── order-service.yaml
@@ -20,21 +21,91 @@ AlphaOMS
 │   ├── symbol-service.yaml
 │   └── user-service.yaml
 ├── proto
+│   ├── accounting.proto
+│   ├── config.proto
+│   ├── log_event.proto
 │   └── order.proto
 ├── services
 │   ├── accounting-service
+│   │   ├── builddir
+│   │   │   ├── accounting-service.p
+│   │   │   │   ├── src_accounting.grpc.pb.cc.o
+│   │   │   │   ├── src_accounting.pb.cc.o
+│   │   │   │   ├── src_funding_handler.cpp.o
+│   │   │   │   ├── src_grpc_interface.cpp.o
+│   │   │   │   ├── src_ledger.cpp.o
+│   │   │   │   ├── src_main.cpp.o
+│   │   │   │   ├── src_metrics_server.cpp.o
+│   │   │   │   ├── src_pnl_tracker.cpp.o
+│   │   │   │   ├── src_postgres_writer.cpp.o
+│   │   │   │   ├── src_redis_listener.cpp.o
+│   │   │   │   └── src_settlement_engine.cpp.o
+│   │   │   ├── meson-info
+│   │   │   │   ├── intro-benchmarks.json
+│   │   │   │   ├── intro-buildoptions.json
+│   │   │   │   ├── intro-buildsystem_files.json
+│   │   │   │   ├── intro-compilers.json
+│   │   │   │   ├── intro-dependencies.json
+│   │   │   │   ├── intro-install_plan.json
+│   │   │   │   ├── intro-installed.json
+│   │   │   │   ├── intro-machines.json
+│   │   │   │   ├── intro-projectinfo.json
+│   │   │   │   ├── intro-targets.json
+│   │   │   │   ├── intro-tests.json
+│   │   │   │   └── meson-info.json
+│   │   │   ├── meson-logs
+│   │   │   │   └── meson-log.txt
+│   │   │   ├── meson-private
+│   │   │   │   ├── build.dat
+│   │   │   │   ├── cmd_line.txt
+│   │   │   │   ├── coredata.dat
+│   │   │   │   ├── install.dat
+│   │   │   │   ├── meson_benchmark_setup.dat
+│   │   │   │   ├── meson_test_setup.dat
+│   │   │   │   ├── meson.lock
+│   │   │   │   ├── sanitycheckcpp.cc
+│   │   │   │   └── sanitycheckcpp.exe
+│   │   │   ├── .DS_Store
+│   │   │   ├── .gitignore
+│   │   │   ├── .hgignore
+│   │   │   ├── .ninja_deps
+│   │   │   ├── .ninja_log
+│   │   │   ├── accounting-service
+│   │   │   ├── build.ninja
+│   │   │   ├── compile_commands.json
+│   │   │   ├── test_funding_handler
+│   │   │   └── test_ledger
 │   │   ├── include
+│   │   │   ├── accounting.grpc.pb.h
+│   │   │   ├── accounting.pb.h
+│   │   │   ├── alert_utils.hpp
 │   │   │   ├── funding_handler.hpp
+│   │   │   ├── grpc_interface.hpp
 │   │   │   ├── ledger.hpp
+│   │   │   ├── metrics_server.hpp
 │   │   │   ├── pnl_tracker.hpp
+│   │   │   ├── postgres_writer.hpp
+│   │   │   ├── redis_listener.hpp
 │   │   │   └── settlement_engine.hpp
 │   │   ├── src
+│   │   │   ├── .DS_Store
+│   │   │   ├── accounting.grpc.pb.cc
+│   │   │   ├── accounting.pb.cc
 │   │   │   ├── funding_handler.cpp
+│   │   │   ├── grpc_interface.cpp
 │   │   │   ├── health_check.cpp
 │   │   │   ├── ledger.cpp
 │   │   │   ├── main.cpp
+│   │   │   ├── metrics_server.cpp
 │   │   │   ├── pnl_tracker.cpp
+│   │   │   ├── postgres_writer.cpp
+│   │   │   ├── redis_listener.cpp
 │   │   │   └── settlement_engine.cpp
+│   │   ├── tests
+│   │   │   ├── test_funding_handler.cpp
+│   │   │   └── test_ledger.cpp
+│   │   ├── .DS_Store
+│   │   ├── .env
 │   │   ├── Dockerfile
 │   │   ├── meson.build
 │   │   └── TODO.md
@@ -42,40 +113,91 @@ AlphaOMS
 │   │   ├── config
 │   │   │   └── alert_rules.json
 │   │   ├── include
+│   │   │   ├── alert_audit_logger.hpp
 │   │   │   ├── alert_dispatcher.hpp
+│   │   │   ├── alert.hpp
 │   │   │   ├── anomaly_detector.hpp
-│   │   │   └── rule_engine.hpp
+│   │   │   ├── config_loader.hpp
+│   │   │   ├── health_check.hpp
+│   │   │   ├── metrics.hpp
+│   │   │   ├── redis_alert_listener.hpp
+│   │   │   ├── redis_anomaly_listener.hpp
+│   │   │   ├── redis_publisher.hpp
+│   │   │   ├── rule_engine.hpp
+│   │   │   └── user_context_provider.hpp
+│   │   ├── logs
+│   │   │   └── alert.log
 │   │   ├── src
+│   │   │   ├── alert_audit_logger.cpp
 │   │   │   ├── alert_dispatcher.cpp
 │   │   │   ├── anomaly_detector.cpp
+│   │   │   ├── config_loader.cpp
 │   │   │   ├── health_check.cpp
 │   │   │   ├── main.cpp
+│   │   │   ├── metrics_server.cpp
+│   │   │   ├── redis_alert_listener.cpp
+│   │   │   ├── redis_anomaly_listener.cpp
+│   │   │   ├── redis_publisher.cpp
+│   │   │   ├── redis_user_context_provider.cpp
 │   │   │   └── rule_engine.cpp
+│   │   ├── tests
+│   │   │   └── rule_engine_test.cpp
+│   │   ├── .env
+│   │   ├── alerts.db
 │   │   ├── Dockerfile
 │   │   ├── meson.build
 │   │   └── TODO.md
 │   ├── audit-log-service
 │   │   ├── data
-│   │   │   └── logs
-│   │   │       └── .gitkeep
+│   │   │   ├── logs
+│   │   │   │   ├── funding
+│   │   │   │   ├── liquidation
+│   │   │   │   ├── order
+│   │   │   │   │   └── 2025-06-11.log
+│   │   │   │   ├── trade
+│   │   │   │   │   └── 2025-06-11.log
+│   │   │   │   ├── .DS_Store
+│   │   │   │   └── .gitkeep
+│   │   │   ├── logs_test
+│   │   │   │   ├── funding
+│   │   │   │   ├── liquidation
+│   │   │   │   ├── order
+│   │   │   │   └── trade
+│   │   │   └── .DS_Store
 │   │   ├── include
 │   │   │   ├── api_server.hpp
-│   │   │   ├── event_types.hpp
-│   │   │   └── log_writer.hpp
+│   │   │   ├── grpc_server.hpp
+│   │   │   ├── health_check.hpp
+│   │   │   ├── log_event.grpc.pb.h
+│   │   │   ├── log_event.pb.h
+│   │   │   ├── log_writer_async.hpp
+│   │   │   ├── log_writer.hpp
+│   │   │   └── redis_consumer.hpp
 │   │   ├── src
 │   │   │   ├── api_server.cpp
+│   │   │   ├── grpc_server.cpp
 │   │   │   ├── health_check.cpp
+│   │   │   ├── log_event.grpc.pb.cc
+│   │   │   ├── log_event.pb.cc
+│   │   │   ├── log_writer_async.cpp
 │   │   │   ├── log_writer.cpp
-│   │   │   └── main.cpp
+│   │   │   ├── main.cpp
+│   │   │   └── redis_consumer.cpp
+│   │   ├── tests
+│   │   │   └── test_log_writer.cpp
+│   │   ├── .DS_Store
 │   │   ├── Dockerfile
 │   │   ├── meson.build
 │   │   └── TODO.md
 │   ├── config-service
 │   │   ├── include
-│   │   │   └── config_loader.hpp
+│   │   │   ├── config_loader.hpp
+│   │   │   └── grpc_server.hpp
 │   │   ├── src
 │   │   │   ├── config_loader.cpp
-│   │   │   └── health_checker.cpp
+│   │   │   ├── grpc_server.cpp
+│   │   │   ├── health_checker.cpp
+│   │   │   └── main.cpp
 │   │   └── meson.build
 │   ├── execution-service
 │   │   ├── include
@@ -340,6 +462,7 @@ AlphaOMS
 │   └── .DS_Store
 ├── shared
 │   └── json
+├── src
 ├── tools
 │   └── test_order_cli.cpp
 ├── .DS_Store

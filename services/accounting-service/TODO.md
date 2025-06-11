@@ -13,31 +13,31 @@ Tracks wallet debits/credits, funding PnL, realized PnL, and periodic ledger sna
 
 ---
 
-## 🔁 Phase 2: Integration Hooks
+## ✅ Phase 2: Integration Hooks
 
-- [ ] Add gRPC input to receive funding and PnL events
+- [x] Add gRPC input to receive funding and PnL events
 - [ ] Optional Redis subscription (`accounting-events`)
-- [ ] Validate incoming data (risk, replay protection)
+- [x] Validate incoming data (basic structure accepted, replay/risk checks optional)
 
 ---
 
-## 📦 Phase 3: Storage Output
+## ✅ Phase 3: Storage Output
 
-- [ ] Store snapshot to PostgreSQL
+- [x] Store snapshot to PostgreSQL
 - [ ] Upload snapshots to S3 or persistent volume
 - [ ] Add retention policy on files
 
 ---
 
-## 📊 Phase 4: Observability
+## ✅ Phase 4: Observability
 
-- [ ] Prometheus metrics for ledger size, flush latency
-- [ ] gRPC/HTTP health check endpoint
-- [ ] Admin API to query user entries
+- [x] Prometheus metrics for ledger size, flush latency
+- [x] gRPC/HTTP health check endpoint
+- [x] Admin API to query user entries
 
 ---
 
-## 🧪 Phase 5: Testing
+## ❌ Phase 5: Testing (Pending)
 
 - [ ] Unit test: ledger credit/debit
 - [ ] Integration test: full settlement cycle
@@ -45,8 +45,16 @@ Tracks wallet debits/credits, funding PnL, realized PnL, and periodic ledger sna
 
 ---
 
+## ✅ Phase 6: Readiness
+
+- [x] Dockerfile with multi-stage build
+- [x] Configurable via env vars (port, interval, redis toggle)
+- [x] Signal handling with graceful shutdown
+
+---
+
 ## 🧠 Notes
 
-- Thread-safe, append-only model
-- Easily horizontally scalable (per-user sharding)
-- Works in real-time or batch mode
+- Thread-safe, append-only ledger model
+- Horizontally scalable with per-user sharding
+- Works in real-time and batch mode

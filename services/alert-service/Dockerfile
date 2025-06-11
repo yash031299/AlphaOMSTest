@@ -1,9 +1,12 @@
-# ---------- STAGE 1 ----------
-FROM ubuntu:22.04 as builder
+# ─────────────────────────────
+# Stage 1: Build Stage
+# ─────────────────────────────
+FROM ubuntu:22.04 AS builder
 
 RUN apt-get update && apt-get install -y \
-    build-essential cmake meson ninja-build \
-    libspdlog-dev libboost-all-dev libnlohmann-json-dev pkg-config
+    build-essential cmake meson ninja-build pkg-config \
+    libspdlog-dev libboost-all-dev libnlohmann-json-dev \
+    libsqlite3-dev libhiredis-dev
 
 WORKDIR /app
 COPY . .
@@ -11,14 +14,31 @@ COPY . .
 RUN meson setup build --buildtype=release
 RUN meson compile -C build
 
-# ---------- STAGE 2 ----------
+# ─────────────────────────────
+# Stage 2: Runtime Stage
+# ─────────────────────────────
 FROM ubuntu:22.04
 
+# Install only runtime dependencies (not dev headers)
 RUN apt-get update && apt-get install -y \
-    libspdlog-dev libboost-system-dev libnlohmann-json-dev
+    libboost-system-dev libboost-thread-dev \
+    libspdlog-dev libnlohmann-json-dev \
+    libsqlite3-0 libhiredis-dev
 
+# Default environment values (overridable by .env)
+ENV REDIS_HOST=127.0.0.1 \
+    REDIS_PORT=6379 \
+    ALERT_RULES=/config/alert_rules.json \
+    SQLITE_DB=alerts.db
+
+# Copy compiled binary + config
 COPY --from=builder /app/build/alert-service /usr/local/bin/alert-service
 COPY config /config
+COPY .env /usr/local/bin/.env
+
+# Optional: entrypoint script for .env loading
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 WORKDIR /usr/local/bin
-CMD ["/usr/local/bin/alert-service"]
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]

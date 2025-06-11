@@ -13,4 +13,6 @@ public:
 
 private:
     redisContext* context;
+    std::string host_;
+    int port_;
 };

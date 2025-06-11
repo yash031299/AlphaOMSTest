@@ -3,7 +3,8 @@
 #include <spdlog/spdlog.h>
 #include <chrono>
 
-RedisPublisher::RedisPublisher(const std::string& host, int port) {
+RedisPublisher::RedisPublisher(const std::string& host, int port)
+    : host_(host), port_(port) {
     context = redisConnect(host.c_str(), port);
     if (!context || context->err) {
         SPDLOG_ERROR("Redis connection failed: {}", context ? context->errstr : "null");
@@ -34,11 +35,20 @@ void RedisPublisher::publishAlert(const std::string& userId, const Alert& alert)
         std::string payload = j.dump();
         redisReply* reply = (redisReply*)redisCommand(context, "PUBLISH alert-stream %s", payload.c_str());
 
+        if (!reply) {
+            SPDLOG_WARN("Initial Redis publish failed. Retrying...");
+            redisFree(context);
+            context = redisConnect(host_.c_str(), port_);
+            if (context && !context->err) {
+                reply = (redisReply*)redisCommand(context, "PUBLISH alert-stream %s", payload.c_str());
+            }
+        }
+
         if (reply) {
             SPDLOG_INFO("📤 Published alert to Redis: {}", payload);
             freeReplyObject(reply);
         } else {
-            SPDLOG_ERROR("Redis publish failed");
+            SPDLOG_ERROR("Redis publish permanently failed.");
         }
     } catch (const std::exception& e) {
         SPDLOG_ERROR("Redis publishAlert error: {}", e.what());

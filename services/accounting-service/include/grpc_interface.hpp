@@ -1,7 +1,12 @@
 #pragma once
+#include <memory>
 #include <string>
+#include "ledger.hpp"
 
 class AccountingGRPCServer {
 public:
-    void run(const std::string& address = "0.0.0.0:5050");
+    AccountingGRPCServer(std::shared_ptr<Ledger> ledger);
+    void run(const std::string& address);
+private:
+    std::shared_ptr<Ledger> ledger_;
 };

@@ -20,6 +20,8 @@ public:
     void credit(const LedgerEntry& entry);
     void debit(const LedgerEntry& entry);
     std::vector<LedgerEntry> getEntries(const std::string& userId);
+    std::unordered_map<std::string, std::vector<LedgerEntry>> getAll() const;
+
 
 private:
     std::mutex mutex_;

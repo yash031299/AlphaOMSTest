@@ -14,11 +14,11 @@ This service handles append-only audit logs for compliance, debugging, and analy
 
 ---
 
-## 🔁 Phase 2: Integration & Input
+## ✅ Phase 2: Integration & Input
 
-- [ ] Add gRPC `LogEventService` endpoint
-- [ ] Support Redis consumer (optional)
-- [ ] Use async buffered logger (ring queue)
+- [x] Add gRPC `LogEventService` endpoint
+- [x] Support Redis consumer (optional)
+- [x] Use async buffered logger (ring queue)
 
 ---
 
@@ -31,15 +31,15 @@ This service handles append-only audit logs for compliance, debugging, and analy
 
 ---
 
-## 📊 Phase 4: Monitoring & Observability
+## ⚙️ Phase 4: Monitoring & Observability
 
-- [ ] Log IOPS metrics (writes/sec)
+- [x] Log IOPS metrics (writes/sec)
 - [ ] Prometheus metric: last write timestamp
-- [ ] `/healthz` endpoint or gRPC health probe
+- [ ] `/healthz` endpoint or gRPC health probe — _skipped for now_
 
 ---
 
-## 🧪 Phase 5: Testing
+## 🔬 Phase 5: Testing
 
 - [ ] Unit test all `toJson()` functions
 - [ ] Fuzz malformed inputs

@@ -12,6 +12,7 @@ message FundingRequest {
   string symbol = 2;
   double funding_amount = 3;
   string timestamp = 4;
+  string reference = 5;
 }
 
 message PnLRequest {
@@ -19,6 +20,7 @@ message PnLRequest {
   string symbol = 2;
   double realized_pnl = 3;
   string timestamp = 4;
+  string reference = 5;
 }
 
 message Ack {

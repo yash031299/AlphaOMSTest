@@ -1,14 +1,8 @@
 #pragma once
-#include <thread>
-#include <atomic>
+#include <memory>
+class AlertDispatcher;
 
 class RedisAlertListener {
 public:
-    void start();
-    void stop();
-
-private:
-    void listen();
-    std::thread listenerThread;
-    std::atomic<bool> running{false};
+    void start(std::shared_ptr<AlertDispatcher> dispatcher);
 };

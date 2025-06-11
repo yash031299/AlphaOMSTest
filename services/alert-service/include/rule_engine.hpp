@@ -1,34 +1,24 @@
-#ifndef RULE_ENGINE_HPP
-#define RULE_ENGINE_HPP
-
+#pragma once
+#include "alert.hpp"
+#include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
-#include <nlohmann/json.hpp>
 
 struct AlertContext {
     std::string userId;
     std::string symbol;
-    double balance;
-    double equity;
-    double pnl;
-    double margin;
-    std::string timestamp;
-};
-
-struct Alert {
-    std::string message;
-    std::string severity; // info, warning, critical
+    double balance = 0;
+    double equity = 0;
+    double pnl = 0;
+    double margin = 0;
     std::string timestamp;
 };
 
 class RuleEngine {
 public:
-    RuleEngine(const std::string& configPath);
-
+    explicit RuleEngine(const std::string& configPath);
     std::vector<Alert> evaluate(const AlertContext& ctx);
 
 private:
     nlohmann::json rules_;
 };
-
-#endif // RULE_ENGINE_HPP

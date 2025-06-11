@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <filesystem>
 
+
 namespace fs = std::filesystem;
 using json = nlohmann::json;
 
@@ -22,59 +23,10 @@ std::string LogWriter::todayDate() {
     return ss.str(); // e.g., "2025-06-07"
 }
 
-void LogWriter::appendToFile(const std::string& path, const std::string& json) {
+void LogWriter::appendToFile(const std::string& path, const std::string& jsonStr) {
     std::lock_guard<std::mutex> lock(mutex_);
     std::ofstream ofs(path, std::ios::app);
-    ofs << json << "\n";
-}
-
-std::string LogWriter::toJson(const TradeEvent& e) {
-    return json{
-        {"type", "trade"},
-        {"symbol", e.symbol},
-        {"maker", e.makerOrderId},
-        {"taker", e.takerOrderId},
-        {"price", e.price},
-        {"quantity", e.quantity},
-        {"timestamp", e.timestamp}
-    }.dump();
-}
-
-std::string LogWriter::toJson(const OrderEvent& e) {
-    return json{
-        {"type", "order"},
-        {"orderId", e.orderId},
-        {"userId", e.userId},
-        {"symbol", e.symbol},
-        {"side", e.side},
-        {"type_detail", e.type},
-        {"price", e.price},
-        {"quantity", e.quantity},
-        {"status", e.status},
-        {"timestamp", e.timestamp}
-    }.dump();
-}
-
-std::string LogWriter::toJson(const FundingEvent& e) {
-    return json{
-        {"type", "funding"},
-        {"symbol", e.symbol},
-        {"rate", e.fundingRate},
-        {"longOi", e.longOi},
-        {"shortOi", e.shortOi},
-        {"timestamp", e.timestamp}
-    }.dump();
-}
-
-std::string LogWriter::toJson(const LiquidationEvent& e) {
-    return json{
-        {"type", "liquidation"},
-        {"userId", e.userId},
-        {"symbol", e.symbol},
-        {"pnl", e.pnl},
-        {"reason", e.reason},
-        {"timestamp", e.timestamp}
-    }.dump();
+    ofs << jsonStr << "\n";
 }
 
 void LogWriter::writeTrade(const TradeEvent& e) {
@@ -91,4 +43,53 @@ void LogWriter::writeFunding(const FundingEvent& e) {
 
 void LogWriter::writeLiquidation(const LiquidationEvent& e) {
     appendToFile(baseDir_ + "/liquidation/" + todayDate() + ".log", toJson(e));
+}
+
+std::string LogWriter::toJson(const TradeEvent& e) {
+    return json{
+        {"type", "trade"},
+        {"symbol", e.symbol()},
+        {"maker", e.makerorderid()},
+        {"taker", e.takerorderid()},
+        {"price", e.price()},
+        {"quantity", e.quantity()},
+        {"timestamp", e.timestamp()}
+    }.dump();
+}
+
+std::string LogWriter::toJson(const OrderEvent& e) {
+    return json{
+        {"type", "order"},
+        {"orderId", e.orderid()},
+        {"userId", e.userid()},
+        {"symbol", e.symbol()},
+        {"side", e.side()},
+        {"type_detail", e.type_detail()},
+        {"price", e.price()},
+        {"quantity", e.quantity()},
+        {"status", e.status()},
+        {"timestamp", e.timestamp()}
+    }.dump();
+}
+
+std::string LogWriter::toJson(const FundingEvent& e) {
+    return json{
+        {"type", "funding"},
+        {"symbol", e.symbol()},
+        {"rate", e.fundingrate()},
+        {"longOi", e.longoi()},
+        {"shortOi", e.shortoi()},
+        {"timestamp", e.timestamp()}
+    }.dump();
+}
+
+std::string LogWriter::toJson(const LiquidationEvent& e) {
+    return json{
+        {"type", "liquidation"},
+        {"userId", e.userid()},
+        {"symbol", e.symbol()},
+        {"pnl", e.pnl()},
+        {"reason", e.reason()},
+        {"timestamp", e.timestamp()}
+    }.dump();
 }
